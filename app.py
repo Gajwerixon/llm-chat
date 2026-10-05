@@ -8,6 +8,9 @@ SYSTEM_PROMPT = {
 
 with gr.Blocks() as demo:
 
+    # Data save in Ollama form {"role": ..., "content": ...}
+    conversation = gr.State([SYSTEM_PROMPT])
+
     with gr.Row():
         user_input = gr.Textbox(
             placeholder="Ask about anything",
@@ -17,22 +20,14 @@ with gr.Blocks() as demo:
 
     chat_bot = gr.Chatbot()
 
+    def user(user_input, conversation):
+        conversation.append({"role": "user","content": user_input})
+        return "", conversation
 
-    def user(user_input, history):
-        return "", history +  [{"role": "user","content": user_input}]
-
-    def bot(history):
-        messages = [SYSTEM_PROMPT]
-
-        for items in history:
-            messages.append({
-                "role": items["role"], 
-                "content": items["content"][0]["text"]
-            })
-
+    def bot(conversation):
         response = chat(
             model="gemma3:4b", 
-            messages=messages, 
+            messages=conversation, 
             stream=True
         )
 
@@ -40,21 +35,41 @@ with gr.Blocks() as demo:
         for chunk in response:
             chat_output += chunk.message.content
 
-        history.append({
+        conversation.append({
             "role": "assistant", 
             "content": chat_output
         })
-        return history
+
+        return conversation
+
+    def conversation_to_chatbot(conversation):
+        chat_history = []
+
+        for message in conversation:
+            if message["role"] == "system":
+                continue
+
+            chat_history.append({
+                "role": message["role"],
+                "content": message["content"]
+            })
+
+        return chat_history
+
 
     user_input.submit(
         user, 
-        [user_input, chat_bot],
-        [user_input, chat_bot],
+        [user_input, conversation],
+        [user_input, conversation],
         queue=False
     ).then(
         bot, 
-        chat_bot, 
-        chat_bot
+        conversation, 
+        conversation
+    ).then(
+        conversation_to_chatbot,
+        conversation,
+        chat_bot,
     )
 
 demo.launch()
