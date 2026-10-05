@@ -34,27 +34,13 @@ with gr.Blocks() as demo:
         chat_output = ""
         for chunk in response:
             chat_output += chunk.message.content
+            conversation_temp = conversation + [{"role": "assistant", "content": chat_output}]
+            yield conversation_temp
 
         conversation.append({
             "role": "assistant", 
             "content": chat_output
         })
-
-        return conversation
-
-    def conversation_to_chatbot(conversation):
-        chat_history = []
-
-        for message in conversation:
-            if message["role"] == "system":
-                continue
-
-            chat_history.append({
-                "role": message["role"],
-                "content": message["content"]
-            })
-
-        return chat_history
 
 
     user_input.submit(
@@ -65,11 +51,7 @@ with gr.Blocks() as demo:
     ).then(
         bot, 
         conversation, 
-        conversation
-    ).then(
-        conversation_to_chatbot,
-        conversation,
-        chat_bot,
+        chat_bot
     )
 
 demo.launch()
