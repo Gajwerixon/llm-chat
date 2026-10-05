@@ -50,7 +50,7 @@ Gradio will start the local web interface. Open the address shown in the termina
 ## Project Roadmap
 * [x] **1. Demo** — Gradio chat interface with a bot returning random messages.
 * [x] **2. App** — Connect the Gradio chat interface to Ollama.
-* [ ] **3. Streaming model answers** — Display the local LLM response token by token as it is generated.
+* [X] **3. Streaming model answers** — Display the local LLM response token by token as it is generated.
 * [ ] **4. Save one conversation history** — Store and restore a single conversation.
 * [ ] **5. Multiple conversations** — Add the ability to create and switch between conversations.
 * [ ] **6. System prompt** — Add and manage the model's system prompt.
