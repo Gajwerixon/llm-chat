@@ -46,6 +46,9 @@ with gr.Blocks() as demo:
 
     chat_bot = gr.Chatbot(value=chat_history)
 
+    with gr.Row():
+        clear_btn = gr.Button(value="Clear chat")
+
 
     def user(user_input, conversation):
         conversation.append({"role": "user", "content": user_input})
@@ -81,6 +84,17 @@ with gr.Blocks() as demo:
         return conversation
 
 
+    def clear_chat(conversation, chat_output_state):
+
+        conversation = [conversation[0]]
+
+        chat_output_state = ""
+
+        with open(CHAT_FILE, "w", encoding="utf-8") as file:
+            json.dump(conversation, file, ensure_ascii=False, indent=4)
+
+        return conversation, chat_output_state, []
+        
     user_input.submit(
         user, 
         [user_input, conversation],
@@ -94,6 +108,12 @@ with gr.Blocks() as demo:
         update_conversation,
         [conversation, chat_output_state],
         conversation
+    )
+
+    clear_btn.click(
+        clear_chat,
+        [conversation, chat_output_state],
+        [conversation, chat_output_state, chat_bot]
     )
 
 demo.launch()
