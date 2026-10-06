@@ -1,32 +1,33 @@
-import gradio as gr
 import json
-
-from ollama import chat
 from pathlib import Path
 
-SYSTEM_PROMPT = {
-    "role": "system", 
-    "content": "You are helpful assistant."
-}
+import gradio as gr
+from ollama import chat
+
 
 CHATS_DIR = Path("chats")
 CHATS_DIR.mkdir(exist_ok=True)
 CHAT_FILE = CHATS_DIR / "chat_1.json"
-print(CHAT_FILE)
 
-initial_conversation = ""
+SYSTEM_PROMPT = {
+    "role": "system", 
+    "content": "You are a helpful assistant."
+}
+
+
 if CHAT_FILE.exists():
     with open(CHAT_FILE, "r", encoding="utf-8") as file:
         initial_conversation = json.load(file)
 else:
     initial_conversation = [SYSTEM_PROMPT]
 
+
 with gr.Blocks() as demo:
 
-    # Data save in Ollama form {"role": ..., "content": ...}
+    # Conversation history in Ollama message format
     conversation = gr.State(initial_conversation)
 
-    # Output of current model answer
+    # Current model response.
     chat_output_state = gr.State("")
 
     with gr.Row():
@@ -40,8 +41,9 @@ with gr.Blocks() as demo:
 
 
     def user(user_input, conversation):
-        conversation.append({"role": "user","content": user_input})
+        conversation.append({"role": "user", "content": user_input})
         return "", conversation
+
 
     def bot(conversation):
         response = chat(
@@ -53,13 +55,15 @@ with gr.Blocks() as demo:
         chat_output = ""
         for chunk in response:
             chat_output += chunk.message.content
-            conversation_temp = conversation + [{"role": "assistant", "content": chat_output}]
+            conversation_temp = conversation + [
+                {"role": "assistant", "content": chat_output}
+            ]
             yield conversation_temp, chat_output
 
 
     def update_conversation(conversation, output_state):
         conversation.append({
-            "role": "assistant", 
+            "role": "assistant",
             "content": output_state
         })
 
