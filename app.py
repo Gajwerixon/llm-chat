@@ -14,10 +14,17 @@ SYSTEM_PROMPT = {
     "content": "You are a helpful assistant."
 }
 
+chat_history = []
 
 if CHAT_FILE.exists():
     with open(CHAT_FILE, "r", encoding="utf-8") as file:
         initial_conversation = json.load(file)
+
+        for message in initial_conversation:
+            if message["role"] == "system":
+                continue
+            chat_history.append(message)
+
 else:
     initial_conversation = [SYSTEM_PROMPT]
 
@@ -37,7 +44,7 @@ with gr.Blocks() as demo:
             elem_id="user-input"
         )
 
-    chat_bot = gr.Chatbot()
+    chat_bot = gr.Chatbot(value=chat_history)
 
 
     def user(user_input, conversation):
