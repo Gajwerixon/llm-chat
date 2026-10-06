@@ -12,11 +12,19 @@ SYSTEM_PROMPT = {
 CHATS_DIR = Path("chats")
 CHATS_DIR.mkdir(exist_ok=True)
 CHAT_FILE = CHATS_DIR / "chat_1.json"
+print(CHAT_FILE)
+
+initial_conversation = ""
+if CHAT_FILE.exists():
+    with open(CHAT_FILE, "r", encoding="utf-8") as file:
+        initial_conversation = json.load(file)
+else:
+    initial_conversation = [SYSTEM_PROMPT]
 
 with gr.Blocks() as demo:
 
     # Data save in Ollama form {"role": ..., "content": ...}
-    conversation = gr.State([SYSTEM_PROMPT])
+    conversation = gr.State(initial_conversation)
 
     # Output of current model answer
     chat_output_state = gr.State("")
