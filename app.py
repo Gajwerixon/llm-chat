@@ -3,39 +3,21 @@ from pathlib import Path
 
 import gradio as gr
 from ollama import chat
+from chat_manager import ChatManager
 
 
-CHATS_DIR = Path("chats")
-CHATS_DIR.mkdir(exist_ok=True)
-CHAT_FILE = CHATS_DIR / "chat_1.json"
-
-SYSTEM_PROMPT = {
-    "role": "system", 
-    "content": "You are a helpful assistant."
-}
-
-chat_history = []
-
-if CHAT_FILE.exists():
-    with open(CHAT_FILE, "r", encoding="utf-8") as file:
-        initial_conversation = json.load(file)
-
-        for message in initial_conversation:
-            if message["role"] == "system":
-                continue
-            chat_history.append(message)
-
-else:
-    initial_conversation = [SYSTEM_PROMPT]
+manager = ChatManager()
+manager.initialize_current_chat()
 
 
 with gr.Blocks() as demo:
 
     # Conversation history in Ollama message format
-    conversation = gr.State(initial_conversation)
+    conversation = gr.State(manager.current_conversation)
 
     # Current model response.
     chat_output_state = gr.State("")
+
 
     with gr.Row():
         user_input = gr.Textbox(
@@ -44,10 +26,15 @@ with gr.Blocks() as demo:
             elem_id="user-input"
         )
 
-    chat_bot = gr.Chatbot(value=chat_history)
+    chat_bot = gr.Chatbot(value=manager.chat_history)
+
 
     with gr.Row():
         clear_btn = gr.Button(value="Clear chat")
+
+
+    with gr.Row():
+        new_chat_btn = gr.Button(value="New chat")
 
 
     def user(user_input, conversation):
@@ -78,20 +65,14 @@ with gr.Blocks() as demo:
         })
 
         # Save data
-        with open(CHAT_FILE, "w", encoding="utf-8") as file:
-            json.dump(conversation, file, ensure_ascii=False, indent=4)
+        manager.add_assistant_message(conversation)
 
         return conversation
 
 
     def clear_chat(conversation, chat_output_state):
-
-        conversation = [conversation[0]]
-
+        conversation = manager.clear_current_chat()
         chat_output_state = ""
-
-        with open(CHAT_FILE, "w", encoding="utf-8") as file:
-            json.dump(conversation, file, ensure_ascii=False, indent=4)
 
         return conversation, chat_output_state, []
         
