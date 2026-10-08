@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import gradio as gr
 from ollama import chat
 from chat_manager import ChatManager
@@ -15,8 +12,8 @@ with gr.Blocks() as demo:
     # Conversation history in Ollama message format
     conversation = gr.State(manager.current_conversation)
 
-    # Current model response.
-    chat_output_state = gr.State("")
+    # Current model response
+    assistant_response  = gr.State("")
 
 
     with gr.Row():
@@ -26,7 +23,7 @@ with gr.Blocks() as demo:
             elem_id="user-input"
         )
 
-    chat_bot = gr.Chatbot(value=manager.chat_history)
+    chat_bot = gr.Chatbot(value=manager.get_chat_history())
 
 
     with gr.Row():
@@ -58,23 +55,23 @@ with gr.Blocks() as demo:
             yield conversation_temp, chat_output
 
 
-    def update_conversation(conversation, output_state):
+    def add_assistant_message(conversation, output_state):
         conversation.append({
             "role": "assistant",
             "content": output_state
         })
 
         # Save data
-        manager.add_assistant_message(conversation)
+        manager.save_chat(conversation)
 
         return conversation
 
 
-    def clear_chat(conversation, chat_output_state):
+    def clear_chat(conversation, assistant_response ):
         conversation = manager.clear_current_chat()
-        chat_output_state = ""
+        assistant_response  = ""
 
-        return conversation, chat_output_state, []
+        return conversation, assistant_response , []
         
     user_input.submit(
         user, 
@@ -84,17 +81,17 @@ with gr.Blocks() as demo:
     ).then(
         bot,
         conversation,
-        [chat_bot, chat_output_state]
+        [chat_bot, assistant_response ]
     ).then(
-        update_conversation,
-        [conversation, chat_output_state],
+        add_assistant_message,
+        [conversation, assistant_response ],
         conversation
     )
 
     clear_btn.click(
         clear_chat,
-        [conversation, chat_output_state],
-        [conversation, chat_output_state, chat_bot]
+        [conversation, assistant_response ],
+        [conversation, assistant_response , chat_bot]
     )
 
 demo.launch()
