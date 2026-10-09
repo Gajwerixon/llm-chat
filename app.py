@@ -67,12 +67,17 @@ with gr.Blocks() as demo:
         return conversation
 
 
-    def clear_chat(conversation, assistant_response ):
+    def create_new_chat():
+        ...
+
+
+    def clear_chat(conversation, assistant_response):
         conversation = manager.clear_current_chat()
         assistant_response  = ""
 
         return conversation, assistant_response , []
-        
+
+    # Conversation flow
     user_input.submit(
         user, 
         [user_input, conversation],
@@ -81,17 +86,21 @@ with gr.Blocks() as demo:
     ).then(
         bot,
         conversation,
-        [chat_bot, assistant_response ]
+        [chat_bot, assistant_response]
     ).then(
         add_assistant_message,
-        [conversation, assistant_response ],
+        [conversation, assistant_response],
         conversation
     )
 
     clear_btn.click(
         clear_chat,
-        [conversation, assistant_response ],
-        [conversation, assistant_response , chat_bot]
+        [conversation, assistant_response],
+        [conversation, assistant_response, chat_bot]
+    )
+
+    new_chat_btn.click(
+        create_new_chat,
     )
 
 demo.launch()

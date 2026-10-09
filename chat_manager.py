@@ -31,8 +31,12 @@ class ChatManager:
     def create_chat(self):
         self.current_chat_id = 1
 
+        with open(self.state_file, "w", encoding="utf-8") as file:
+            state = [{"current_chat": self.current_chat_id}]
+            json.dump(state, file, indent=4)
+
         with open(self.chat_file, "w", encoding="utf-8") as file:
-            json.dump(self.system_prompt, file)
+            json.dump(self.system_prompt, file, indent=4)
             return [self.system_prompt]
 
 
@@ -64,12 +68,13 @@ class ChatManager:
                 return None
 
 
-    def get_chat_history(self):    
-        return [
-            message
-            for message in self.current_conversation
-            if message["role"] != "system"
-        ]
+    def get_chat_history(self): 
+        chat_history = []
+        for message in self.current_conversation:
+            if message["role"] != "system":
+                chat_history.append(message)
+
+        return chat_history
 
 
     @property
