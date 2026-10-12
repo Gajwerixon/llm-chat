@@ -7,7 +7,7 @@ class ChatManager:
         self.chats_dir = Path("chats")
         self.chats_dir.mkdir(exist_ok=True)
 
-        self.state_file = Path("state.json")
+        self.current_chat_file = Path("current_chat.json")
 
         self.system_prompt = {
             "role": "system", 
@@ -19,24 +19,31 @@ class ChatManager:
 
 
     def initialize_current_chat(self):
-        """Load the active chat or create the first chat"""
+        """Load the active chat (if exists) or create the first chat"""
         self.current_chat_id = self.get_current_chat_id()
 
         if self.current_chat_id is None:
+            self.current_chat_id = 1
             self.current_conversation = self.create_chat()
         else:
             self.current_conversation = self.load_chat()
 
 
     def create_chat(self):
-        self.current_chat_id = 1
-
-        with open(self.state_file, "w", encoding="utf-8") as file:
-            state = [{"current_chat": self.current_chat_id}]
-            json.dump(state, file, indent=4)
+        with open(self.current_chat_file, "w", encoding="utf-8") as file:
+            json.dump(
+                {"current_chat": self.current_chat_id}, 
+                file, 
+                indent=4
+            )
 
         with open(self.chat_file, "w", encoding="utf-8") as file:
-            json.dump(self.system_prompt, file, indent=4)
+            json.dump(
+                self.system_prompt, 
+                file, 
+                indent=4
+            )
+
             return [self.system_prompt]
 
 
@@ -51,19 +58,12 @@ class ChatManager:
             json.dump(conversation, file, ensure_ascii=False, indent=4)
 
 
-    def clear_current_chat(self):
-        """Remove all messages except the system prompt"""
-        with open(self.chat_file, "w", encoding="utf-8") as file:
-            json.dump([self.system_prompt], file, ensure_ascii=False, indent=4)
-            return self.system_prompt
-
-
     def get_current_chat_id(self):
-        if self.state_file.exists():
-            with open(self.state_file, "r", encoding="utf-8") as file:
+        if self.current_chat_file.exists():
+            with open(self.current_chat_file, "r", encoding="utf-8") as file:
                 return json.load(file)["current_chat"]
         else:
-            with open(self.state_file, "w", encoding="utf-8") as file:
+            with open(self.current_chat_file, "w", encoding="utf-8") as file:
                 json.dump({"current_chat": None}, file)
                 return None
 
