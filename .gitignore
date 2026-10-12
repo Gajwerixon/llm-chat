@@ -3,7 +3,7 @@ __pycache__/
 *.py[codz]
 *$py.class
 /chats
-state.json
+current_chat.json
 
 # C extensions
 *.so
