@@ -2,18 +2,23 @@ import gradio as gr
 from ollama import chat
 from chat_manager import ChatManager
 
-
 manager = ChatManager()
 manager.initialize_current_chat()
 
+def get_chat_choices():
+    """Return labels for all saved chats."""
+    return [
+        f"Chat {chat_id}"
+        for chat_id in manager.get_chat_ids()
+    ]
+
 
 with gr.Blocks() as demo:
-
+    # Application state
     conversation = gr.State(manager.current_conversation)
-
     assistant_response  = gr.State("")
 
-
+    # Chat interface
     with gr.Row():
         user_input = gr.Textbox(
             placeholder="Ask about anything",
@@ -21,35 +26,26 @@ with gr.Blocks() as demo:
             elem_id="user-input"
         )
 
-
     chat_bot = gr.Chatbot(value=manager.get_chat_history())
-
 
     with gr.Row():
         new_chat_btn = gr.Button(value="New chat")
 
-
-    # Create radio menu with chats
     chat_selector = gr.Radio(
-        choices=[
-            f"Chat {chat_id}"
-            for chat_id in manager.get_all_chats()
-        ],
+        choices=get_chat_choices(),
         label="Your chats:"
     )
 
 
-    def user(user_input, conversation):
-        """Get user input"""
-
+    def add_user_message(user_input, conversation):
+        """Append a user message to the conversation."""
         conversation.append({"role": "user", "content": user_input})
 
         return "", conversation
 
 
-    def bot(conversation):
-        """Get chat response"""
-
+    def generate_response(conversation):
+        """Stream the assistant response from Ollama."""
         response = chat(
             model="gemma3:4b", 
             messages=conversation, 
@@ -67,8 +63,8 @@ with gr.Blocks() as demo:
             yield conversation_temp, chat_output
 
 
-    def add_assistant_message(conversation, output_state):
-
+    def save_assistant_message(conversation, output_state):
+        """Append and save the final assistant response."""
         conversation.append({
             "role": "assistant",
             "content": output_state
@@ -80,49 +76,50 @@ with gr.Blocks() as demo:
 
 
     def create_new_chat():
-
+        """Create a chat and refresh the selector."""
         conversation = manager.create_new_chat()
 
-        return conversation, [], gr.Radio(
-            choices=[
-                f"Chat {chat_id}"
-                for chat_id in manager.get_all_chats()
-            ],
-            label="Your chats:"
+        updated_selector = gr.Radio(
+            choices=get_chat_choices(),
+            value=f"Chat {manager.current_chat_id}",
+            label="Your chats",
         )
+
+        return conversation, [], updated_selector
 
 
     def switch_chat(selected_chat):
-
-        chat_id = int(selected_chat.split(" ")[1])
-
+        """Load the selected chat and refresh the interface."""
+        chat_id = int(selected_chat.removeprefix("Chat "))
         conversation = manager.switch_chat(chat_id)
 
         chat_history = manager.get_chat_history()
 
         return conversation, chat_history, ""
 
-
+    # Message submission and response generation
     user_input.submit(
-        user, 
+        add_user_message, 
         [user_input, conversation],
         [user_input, conversation],
         queue=False
     ).then(
-        bot,
+        generate_response,
         conversation,
         [chat_bot, assistant_response]
     ).then(
-        add_assistant_message,
+        save_assistant_message,
         [conversation, assistant_response],
         conversation
     )
 
+    # Create a new chat
     new_chat_btn.click(
         create_new_chat,
         outputs=[conversation, chat_bot, chat_selector]
     )
 
+    # Switch between existing chats
     chat_selector.change(
         switch_chat,
         inputs=chat_selector,

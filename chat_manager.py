@@ -3,11 +3,14 @@ from pathlib import Path
 
 
 class ChatManager:
+    """Manage chat conversations and persist them as JSON files."""
+
     def __init__(self):
+        """Initialize storage paths and default conversation data."""
         self.chats_dir = Path("chats")
         self.chats_dir.mkdir(exist_ok=True)
 
-        self.current_chat_file = Path("current_chat.json")
+        self.state_file = Path("state.json")
 
         self.system_prompt = [{
             "role": "system", 
@@ -19,89 +22,68 @@ class ChatManager:
 
 
     def initialize_current_chat(self):
-        """Load the active chat (if exists) or create the first chat"""
+        """Load the previously active chat or create the first one."""
+        chat_id = self._read_current_chat_id()
 
-        self.current_chat_id = self.get_current_chat_id()
-
-        if self.current_chat_id is None:
-            self.current_chat_id = 1
-            self.current_conversation = self.create_chat()
-
-        else:
+        if self.current_chat_id is not None:
+            self.current_chat_id = chat_id
             self.current_conversation = self.load_chat()
+        else:
+            self.current_conversation = self.create_new_chat()
 
 
-    def create_chat(self):
-        with open(self.current_chat_file, "w", encoding="utf-8") as file:
-            json.dump({"current_chat": self.current_chat_id}, file, indent=4)
+    def create_new_chat(self):
+        """Create a new chat and make it the active conversation."""
+        chat_ids = self.get_chat_ids()
+        self.current_chat_id = max(chat_ids, default=0) + 1
 
-        with open(self.chat_file, "w", encoding="utf-8") as file:
-            json.dump(self.system_prompt, file, indent=4)
+        self.current_conversation = self.system_prompt.copy()
 
-            return self.system_prompt
+        self.save_chat(self.current_conversation)
+        self._save_current_chat_id()
+
+        return self.current_conversation
 
 
     def load_chat(self):
+        """Load the active conversation from its JSON file."""
         with open(self.chat_file, "r", encoding="utf-8") as file:
             return json.load(file)
 
 
     def save_chat(self, conversation):
-        """Save the current conversation to its JSON file"""
+        """Save a conversation to the active chat's JSON file."""
         with open(self.chat_file, "w", encoding="utf-8") as file:
             json.dump(conversation, file, ensure_ascii=False, indent=4)
 
 
-    def get_all_chats(self):
+    def get_chat_ids(self):
+        """Return existing chat IDs in ascending numerical order."""
+        chat_ids = []
 
-        # Get map object of chat_dir
-        chat_files = self.chats_dir.glob("chat_*.json")
+        for path in self.chats_dir.glob("chat_*.json"):
+            try:
+                chat_id = int(path.stem.removeprefix("chat_"))
+            except ValueError:
+                continue
 
-        # Create empty list
-        idx_list = []
+            chat_ids.append(chat_id)
 
-        # Loop of every file, split it on _ and convert string to int
-        for chat in chat_files:
-
-            _, idx = chat.stem.split("_")
-
-            idx_list.append(int(idx))
-
-        # Sort the list before the return
-        return sorted(idx_list)
+        return sorted(chat_ids)
 
 
-    def switch_chat(self, selected_chat):
+    def switch_chat(self, chat_id):
+        """Switch to an existing chat and return its conversation."""
+        self.current_chat_id = chat_id
 
-        # Change current_chat_id to given chat
-        self.current_chat_id = selected_chat
+        self.current_conversation = self.load_chat()
+        self._save_current_chat_id()
 
-        # Switch current chat to new current chat
-        with open(self.current_chat_file, "w", encoding="utf-8") as file:
-            json.dump({"current_chat": self.current_chat_id}, file, indent=4)
-
-        # Load chat conversation
-        with open(self.chat_file, "r", encoding="utf-8") as file:
-            self.current_conversation = json.load(file)
-            return self.current_conversation 
-    
-
-    def get_current_chat_id(self):
-
-        if self.current_chat_file.exists():
-            with open(self.current_chat_file, "r", encoding="utf-8") as file:
-
-                return json.load(file)["current_chat"]
-            
-        else:
-            with open(self.current_chat_file, "w", encoding="utf-8") as file:
-                json.dump({"current_chat": None}, file)
-
-                return None
+        return self.current_conversation
 
 
     def get_chat_history(self): 
-
+        """Return the active conversation without the system prompt."""
         chat_history = []
 
         for message in self.current_conversation:
@@ -111,18 +93,26 @@ class ChatManager:
         return chat_history
 
 
-    def create_new_chat(self):
+    def _save_current_chat_id(self):
+        """Persist the ID of the active chat."""
+        with self.state_file.open("w", encoding="utf-8") as file:
+            json.dump(
+                {"current_chat": self.current_chat_id},
+                file,
+                indent=4,
+            )
 
-        self.current_chat_id += 1
 
-        with open(self.current_chat_file, "w", encoding="utf-8") as file:
-            json.dump({"current_chat": self.current_chat_id}, file, indent=4)
+    def _read_current_chat_id(self):
+        """Read the active chat ID from the state file."""
+        if not self.state_file.exists():
+            return None
 
-        with open(self.chat_file, "w", encoding="utf-8") as file:
-            json.dump(self.system_prompt, file, indent=4)
-            return self.system_prompt
-
+        with self.state_file.open("r", encoding="utf-8") as file:
+            return json.load(file).get("current_chat")
+    
 
     @property
     def chat_file(self):
+        """Return the file path for the active conversation."""
         return self.chats_dir / f"chat_{self.current_chat_id}.json"
