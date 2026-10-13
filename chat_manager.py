@@ -69,6 +69,21 @@ class ChatManager:
 
         # Sort the list before the return
         return sorted(idx_list)
+
+
+    def switch_chat(self, selected_chat):
+
+        # Change current_chat_id to given chat
+        self.current_chat_id = selected_chat
+
+        # Switch current chat to new current chat
+        with open(self.current_chat_file, "w", encoding="utf-8") as file:
+            json.dump({"current_chat": self.current_chat_id}, file, indent=4)
+
+        # Load chat conversation
+        with open(self.chat_file, "r", encoding="utf-8") as file:
+            self.current_conversation = json.load(file)
+            return self.current_conversation 
     
 
     def get_current_chat_id(self):

@@ -92,6 +92,17 @@ with gr.Blocks() as demo:
         )
 
 
+    def switch_chat(selected_chat):
+
+        chat_id = int(selected_chat.split(" ")[1])
+
+        conversation = manager.switch_chat(chat_id)
+
+        chat_history = manager.get_chat_history()
+
+        return conversation, chat_history, ""
+
+
     user_input.submit(
         user, 
         [user_input, conversation],
@@ -110,6 +121,12 @@ with gr.Blocks() as demo:
     new_chat_btn.click(
         create_new_chat,
         outputs=[conversation, chat_bot, chat_selector]
+    )
+
+    chat_selector.change(
+        switch_chat,
+        inputs=chat_selector,
+        outputs=[conversation, chat_bot, assistant_response]
     )
 
 demo.launch()
