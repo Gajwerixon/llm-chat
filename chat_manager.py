@@ -52,6 +52,25 @@ class ChatManager:
             json.dump(conversation, file, ensure_ascii=False, indent=4)
 
 
+    def get_all_chats(self):
+
+        # Get map object of chat_dir
+        chat_files = self.chats_dir.glob("chat_*.json")
+
+        # Create empty list
+        idx_list = []
+
+        # Loop of every file, split it on _ and convert string to int
+        for chat in chat_files:
+
+            _, idx = chat.stem.split("_")
+
+            idx_list.append(int(idx))
+
+        # Sort the list before the return
+        return sorted(idx_list)
+    
+
     def get_current_chat_id(self):
 
         if self.current_chat_file.exists():

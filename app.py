@@ -29,6 +29,16 @@ with gr.Blocks() as demo:
         new_chat_btn = gr.Button(value="New chat")
 
 
+    # Create radio menu with chats
+    chat_selector = gr.Radio(
+        choices=[
+            f"Chat {chat_id}"
+            for chat_id in manager.get_all_chats()
+        ],
+        label="Your chats:"
+    )
+
+
     def user(user_input, conversation):
         """Get user input"""
 
