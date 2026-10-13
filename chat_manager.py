@@ -25,7 +25,7 @@ class ChatManager:
         """Load the previously active chat or create the first one."""
         chat_id = self._read_current_chat_id()
 
-        if self.current_chat_id is not None:
+        if chat_id is not None:
             self.current_chat_id = chat_id
             self.current_conversation = self.load_chat()
         else:
