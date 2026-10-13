@@ -53,8 +53,8 @@ Gradio will start the local web interface. Open the address shown in the termina
 * [X] **3. Streaming model answers** — Display the local LLM response token by token as it is generated.
 * [X] **4. Save one conversation history** — Store and restore a single conversation.
 * [X] **5. Multiple conversations** — Add the ability to create and switch between conversations.
-* [ ] **6. System prompt** — Add and manage the model's system prompt.
-* [ ] **7. Conversation management** — Clear, rename and delete conversations.
+* [ ] **6. UI and conversation management** — Improve the user interface and add the ability to rename and delete conversations.
+* [ ] **7. System prompt** — Add and manage the model's system prompt.
 
 ## Project Goal
 The goal of this project is to understand how a ChatGPT-like application works under the hood:
