@@ -9,10 +9,10 @@ class ChatManager:
 
         self.current_chat_file = Path("current_chat.json")
 
-        self.system_prompt = {
+        self.system_prompt = [{
             "role": "system", 
             "content": "You are a helpful assistant."
-        }
+        }]
 
         self.current_chat_id = None
         self.current_conversation = []
@@ -20,31 +20,25 @@ class ChatManager:
 
     def initialize_current_chat(self):
         """Load the active chat (if exists) or create the first chat"""
+
         self.current_chat_id = self.get_current_chat_id()
 
         if self.current_chat_id is None:
             self.current_chat_id = 1
             self.current_conversation = self.create_chat()
+
         else:
             self.current_conversation = self.load_chat()
 
 
     def create_chat(self):
         with open(self.current_chat_file, "w", encoding="utf-8") as file:
-            json.dump(
-                {"current_chat": self.current_chat_id}, 
-                file, 
-                indent=4
-            )
+            json.dump({"current_chat": self.current_chat_id}, file, indent=4)
 
         with open(self.chat_file, "w", encoding="utf-8") as file:
-            json.dump(
-                self.system_prompt, 
-                file, 
-                indent=4
-            )
+            json.dump(self.system_prompt, file, indent=4)
 
-            return [self.system_prompt]
+            return self.system_prompt
 
 
     def load_chat(self):
@@ -59,22 +53,40 @@ class ChatManager:
 
 
     def get_current_chat_id(self):
+
         if self.current_chat_file.exists():
             with open(self.current_chat_file, "r", encoding="utf-8") as file:
+
                 return json.load(file)["current_chat"]
+            
         else:
             with open(self.current_chat_file, "w", encoding="utf-8") as file:
                 json.dump({"current_chat": None}, file)
+
                 return None
 
 
     def get_chat_history(self): 
+
         chat_history = []
+
         for message in self.current_conversation:
             if message["role"] != "system":
                 chat_history.append(message)
 
         return chat_history
+
+
+    def create_new_chat(self):
+
+        self.current_chat_id += 1
+
+        with open(self.current_chat_file, "w", encoding="utf-8") as file:
+            json.dump({"current_chat": self.current_chat_id}, file, indent=4)
+
+        with open(self.chat_file, "w", encoding="utf-8") as file:
+            json.dump(self.system_prompt, file, indent=4)
+            return self.system_prompt
 
 
     @property
