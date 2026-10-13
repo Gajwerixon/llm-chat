@@ -83,7 +83,13 @@ with gr.Blocks() as demo:
 
         conversation = manager.create_new_chat()
 
-        return conversation, []
+        return conversation, [], gr.Radio(
+            choices=[
+                f"Chat {chat_id}"
+                for chat_id in manager.get_all_chats()
+            ],
+            label="Your chats:"
+        )
 
 
     user_input.submit(
@@ -103,7 +109,7 @@ with gr.Blocks() as demo:
 
     new_chat_btn.click(
         create_new_chat,
-        outputs=[conversation, chat_bot]
+        outputs=[conversation, chat_bot, chat_selector]
     )
 
 demo.launch()
