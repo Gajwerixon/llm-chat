@@ -27,10 +27,17 @@ with gr.Blocks() as demo:
 
             new_chat_btn = gr.Button("+ New chat")
 
-            chat_selector = gr.Radio(
-                choices=get_chat_choices(),
-                label="Your chats:"
-            )
+            # Conversations
+            with gr.Column(elem_id="chat-list"):
+                chat_buttons = []
+
+                for chat_id in get_chat_choices():
+                    chat_button = gr.Button(
+                        chat_id,
+                        variant="secondary",
+                        size="sm",
+                    )
+                    chat_buttons.append(chat_button)
 
         # Main chat area
         with gr.Column(scale=4):
@@ -88,13 +95,7 @@ with gr.Blocks() as demo:
         """Create a chat and refresh the selector."""
         conversation = manager.create_new_chat()
 
-        updated_selector = gr.Radio(
-            choices=get_chat_choices(),
-            value=f"Chat {manager.current_chat_id}",
-            label="Your chats",
-        )
-
-        return conversation, [], updated_selector
+        return conversation, []
 
 
     def switch_chat(selected_chat):
@@ -125,14 +126,8 @@ with gr.Blocks() as demo:
     # Create a new chat
     new_chat_btn.click(
         create_new_chat,
-        outputs=[conversation, chat_bot, chat_selector]
+        outputs=[conversation, chat_bot]
     )
 
-    # Switch between existing chats
-    chat_selector.change(
-        switch_chat,
-        inputs=chat_selector,
-        outputs=[conversation, chat_bot, assistant_response]
-    )
 
 demo.launch()
