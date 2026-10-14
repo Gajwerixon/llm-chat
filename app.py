@@ -14,27 +14,36 @@ def get_chat_choices():
 
 
 with gr.Blocks() as demo:
+
     # Application state
     conversation = gr.State(manager.current_conversation)
     assistant_response  = gr.State("")
 
-    # Chat interface
     with gr.Row():
-        user_input = gr.Textbox(
-            placeholder="Ask about anything",
-            show_label=False,
-            elem_id="user-input"
-        )
+        # Left sidebar
+        with gr.Column(scale=1, min_width=220):
 
-    chat_bot = gr.Chatbot(value=manager.get_chat_history())
+            gr.Markdown("## My LLM Chat")
 
-    with gr.Row():
-        new_chat_btn = gr.Button(value="New chat")
+            new_chat_btn = gr.Button("+ New chat")
 
-    chat_selector = gr.Radio(
-        choices=get_chat_choices(),
-        label="Your chats:"
-    )
+            chat_selector = gr.Radio(
+                choices=get_chat_choices(),
+                label="Your chats:"
+            )
+
+        # Main chat area
+        with gr.Column(scale=4):
+            chat_bot = gr.Chatbot(
+                value=manager.get_chat_history(),
+                height=600
+            )
+
+            user_input = gr.Textbox(
+                placeholder="Ask about anything",
+                show_label=False,
+                elem_id="user-input"
+            )
 
 
     def add_user_message(user_input, conversation):
